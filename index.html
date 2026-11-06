@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>سواء · الكشف عن التحيز في النصوص وقرارات الذكاء الاصطناعي</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.263.1/dist/umd/lucide.min.js"></script>
+<style>
+:root{--bg:#f4f7fa;--card:#fff;--text:#12263a;--muted:#5b6b7b;--border:#dbe3ea;--teal:#0f8b8d;--orange:#d9722b;--red:#c2410c;--hero:#0f2a43;--soft:#e8eff6;--hl:#fde3cc;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0c1722;--card:#13232f;--text:#e6eef5;--muted:#9fb0bf;--border:#25394a;--teal:#3cc4c6;--orange:#f09a57;--red:#f08a5d;--hero:#0a1b2c;--soft:#182b3a;--hl:#4a3320}}
+:root[data-theme="dark"]{--bg:#0c1722;--card:#13232f;--text:#e6eef5;--muted:#9fb0bf;--border:#25394a;--teal:#3cc4c6;--orange:#f09a57;--red:#f08a5d;--hero:#0a1b2c;--soft:#182b3a;--hl:#4a3320}
+html{scroll-behavior:smooth;scroll-padding-top:5rem}
+body{font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text);line-height:1.8}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px}
+.muted{color:var(--muted)}
+.btn{display:inline-flex;align-items:center;gap:.5rem;padding:.7rem 1.4rem;border-radius:10px;font-weight:600;transition:transform .2s,box-shadow .2s;cursor:pointer;border:1px solid transparent}
+.btn:hover{transform:translateY(-2px)}
+.btn:focus-visible,.chip:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+.btn-primary{background:var(--teal);color:#fff}
+.btn-primary:hover{box-shadow:0 8px 20px rgba(15,139,141,.35)}
+.btn-ghost{border-color:rgba(255,255,255,.4);color:#fff}
+.btn-ghost:hover{background:rgba(255,255,255,.1)}
+.chip{padding:.4rem .9rem;border-radius:999px;border:1px solid var(--border);background:var(--soft);color:var(--text);font-size:.9rem;cursor:pointer;transition:border-color .2s,background .2s}
+.chip:hover{border-color:var(--teal)}
+.chip.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+.hero{background:linear-gradient(160deg,var(--hero),#1e4d7b);color:#fff}
+.mark{background:var(--hl);border-bottom:2px solid var(--orange);border-radius:4px;padding:0 .3rem;color:var(--text)}
+.nav{backdrop-filter:blur(10px);background:color-mix(in srgb,var(--bg) 85%,transparent);border-bottom:1px solid var(--border)}
+.dom{transition:transform .25s,border-color .25s}
+.dom:hover{transform:translateY(-4px);border-color:var(--teal)}
+.bar{height:10px;border-radius:99px;background:var(--soft);overflow:hidden}
+.bar>i{display:block;height:100%;width:0;border-radius:99px;transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.gauge-arc{transition:stroke-dashoffset 1.2s cubic-bezier(.2,.8,.2,1),stroke .4s}
+.rise{animation:rise .9s cubic-bezier(.2,.8,.2,1) both}
+.rise.d1{animation-delay:.15s}.rise.d2{animation-delay:.3s}.rise.d3{animation-delay:.45s}
+@keyframes rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.scan{position:relative;overflow:hidden}
+.scan::after{content:"";position:absolute;inset-inline:0;height:3px;background:var(--teal);box-shadow:0 0 14px var(--teal);top:0;animation:scan 3.2s ease-in-out infinite 1.2s}
+@keyframes scan{0%{top:0;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:100%;opacity:0}}
+.js .fade{opacity:0;transform:translateY(16px);transition:opacity .7s,transform .7s}
+.js .fade.in{opacity:1;transform:none}
+textarea,input[type=number]{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:10px;width:100%;padding:.6rem .9rem;font-size:.9rem}
+input[type=range]{width:100%;accent-color:var(--teal)}
+code,.ltr{direction:ltr;unicode-bidi:isolate}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}.fade{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<nav class="nav sticky z-40" style="top:env(safe-area-inset-top,0px)">
+  <div class="max-w-6xl mx-auto px-5 py-3 flex items-center justify-between">
+    <a href="#top" class="flex items-center gap-2 font-bold text-lg"><i data-lucide="scale" style="color:var(--teal)"></i> سواء</a>
+    <div class="hidden md:flex items-center gap-7 text-sm font-medium">
+      <a href="#demo" class="hover:opacity-70">التدقيق الحي</a><a href="#legal" class="hover:opacity-70">كشف التحيز في النصوص</a><a href="#domains" class="hover:opacity-70">المجالات</a><a href="#method" class="hover:opacity-70">المنهجية</a>
+    </div>
+    <button id="themeBtn" class="chip flex items-center gap-2" aria-label="تبديل المظهر"><i data-lucide="moon"></i><span>المظهر</span></button>
+  </div>
+</nav>
+
+<header id="top" class="hero">
+  <div class="max-w-6xl mx-auto px-5 py-16 md:py-24 grid md:grid-cols-2 gap-12 items-center">
+    <div>
+      <h1 class="rise text-4xl md:text-5xl font-bold leading-tight">تحقيق العدالة الرقمية: الكشف عن التحيز في النصوص وقرارات الذكاء الاصطناعي</h1>
+      <p class="rise d1 mt-6 text-lg opacity-90 max-w-xl">يدقّق النظام في بيانات القرارات التي تصدرها النماذج (قبول، رفض، إحالة، تصنيف خطر) ويقيس هل تعامل الناس المتساوين في الكفاءة معاملة متساوية. ويتتبع مصدر التحيز: هل هو في الخاصية المحمية نفسها أم في متغيرات تحمل أثرها خفية.</p>
+      <div class="rise d2 mt-8 flex flex-wrap gap-3">
+        <a href="#demo" class="btn btn-primary"><i data-lucide="play-circle"></i> تجربة العرض الحي (Live Demo)</a>
+        <a href="#domains" class="btn btn-ghost"><i data-lucide="layout-grid"></i> استعراض المجالات</a>
+      </div>
+    </div>
+    <div class="rise d3 scan card p-6" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2);color:#fff">
+      <p class="text-sm opacity-70 mb-4">نموذج فرز السير الذاتية: نتيجة تدقيق</p>
+      <div class="space-y-3 text-sm">
+        <div><div class="flex justify-between"><span>رجال: الدعوة للمقابلة</span><span>58%</span></div><div class="bar mt-1" style="background:rgba(255,255,255,.15)"><i style="width:58%;background:#6fd3d4"></i></div></div>
+        <div><div class="flex justify-between"><span>نساء: الدعوة للمقابلة</span><span>31%</span></div><div class="bar mt-1" style="background:rgba(255,255,255,.15)"><i style="width:31%;background:#f6b27e"></i></div></div>
+      </div>
+      <div class="mt-5 flex items-center justify-between text-sm"><span class="flex items-center gap-2"><i data-lucide="alert-triangle" style="color:#f6b27e"></i> الأثر المتباين أقل من 0.80</span><span class="font-bold ltr" style="color:#f6b27e">DI = 0.53</span></div>
+      <p class="text-xs opacity-60 mt-3">أرقام توضيحية</p>
+    </div>
+  </div>
+</header>
+
+<main>
+<section id="demo" class="max-w-6xl mx-auto px-5 py-20 fade">
+  <h2 class="text-3xl font-bold">اختبر نموذجًا: هل يعامل الجميع بعدل؟</h2>
+  <p class="muted mt-2 max-w-3xl">تخيّل نظام ذكاء اصطناعي يقرر من يُقبل في وظيفة أو قرض أو برنامج علاج. هنا نختبره كما يفعل المدقق: نعطيه أشخاصًا متساوين في الكفاءة ونرى هل يقبلهم بالتساوي.</p>
+  <div class="grid sm:grid-cols-3 gap-3 mt-6">
+    <div class="card p-4 flex gap-3"><span class="font-bold text-2xl" style="color:var(--teal)">1</span><p class="text-sm">نعطي النموذج 1600 متقدم، مستواهم متساوٍ بين المجموعتين.</p></div>
+    <div class="card p-4 flex gap-3"><span class="font-bold text-2xl" style="color:var(--teal)">2</span><p class="text-sm">يقرر النموذج: قبول أو رفض لكل شخص.</p></div>
+    <div class="card p-4 flex gap-3"><span class="font-bold text-2xl" style="color:var(--teal)">3</span><p class="text-sm">نقارن: إن قُبلت مجموعة أكثر من الأخرى رغم تساوي الكفاءة، فهذا تحيز.</p></div>
+  </div>
+  <div class="grid lg:grid-cols-5 gap-6 mt-8">
+    <div class="card p-6 lg:col-span-2">
+      <p class="font-semibold mb-3">1) اختر مثالًا لنموذج ذكاء اصطناعي</p>
+      <div class="flex flex-wrap gap-2" id="scs"></div>
+      <p id="scDesc" class="text-sm muted mt-3 p-3 rounded-lg" style="background:var(--soft)"></p>
+      <label for="bias" class="font-semibold mt-6 mb-1 flex justify-between"><span>2) اجعل النموذج متحيزًا (للتجربة)</span><span id="bv" class="ltr" style="color:var(--orange)">60%</span></label>
+      <input id="bias" type="range" min="0" max="100" value="60">
+      <div class="flex justify-between text-xs muted mt-1"><span>عادل تمامًا</span><span>متحيز جدًا</span></div><p class="text-xs muted mt-2">حرّك المنزلق وشاهد النتائج تتغير مباشرة في بطاقة النتائج.</p>
+      <details class="mt-6"><summary class="font-semibold cursor-pointer">متقدم: حلّل قرارات نموذجك الحقيقي</summary><div class="mt-3">
+      <p class="text-xs muted mb-2">ملف CSV بأعمدة: <code>group,actual,decision</code> (القرار 1 أو 0، والعمود actual اختياري).</p>
+      <textarea id="csv" rows="4" class="ltr" placeholder="group,actual,decision&#10;female,1,0&#10;male,1,1"></textarea>
+      <div class="flex flex-wrap gap-3 mt-3">
+        <label class="chip flex items-center gap-2"><i data-lucide="upload"></i> رفع ملف<input id="file" type="file" accept=".csv,.txt" class="sr-only"></label>
+        <button id="runCsv" class="btn btn-primary" style="padding:.4rem 1rem"><i data-lucide="search-check"></i> حلّل البيانات</button>
+      </div></div></details>
+    </div>
+    <div class="card p-6 lg:col-span-3" aria-live="polite">
+      <p class="text-sm muted mb-2">النتيجة بالعربي البسيط</p>
+      <div id="verdict" class="p-4 rounded-lg mb-6 text-lg font-semibold leading-relaxed" style="background:var(--soft);border-inline-start:5px solid var(--teal)"></div>
+      <div class="flex items-center gap-6">
+        <div class="relative shrink-0" style="width:130px;height:130px">
+          <svg viewBox="0 0 140 140" width="130" height="130" style="transform:rotate(90deg) scaleX(-1)">
+            <circle cx="70" cy="70" r="58" fill="none" stroke="var(--soft)" stroke-width="12"/>
+            <circle id="arc" class="gauge-arc" cx="70" cy="70" r="58" fill="none" stroke="var(--teal)" stroke-width="12" stroke-linecap="round" stroke-dasharray="364.4" stroke-dashoffset="364.4"/>
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center"><span id="score" class="text-3xl font-bold">0</span><span class="text-xs muted">درجة التحيز</span></div>
+        </div>
+        <div><p id="level" class="text-xl font-bold"></p><p id="levelNote" class="muted text-sm mt-1"></p></div>
+      </div>
+      <p class="font-semibold mt-6 mb-1">نسبة المقبولين من كل مجموعة</p><p class="text-xs muted mb-3">الشريط يمثل نسبة من قُبل من كل المتقدمين في المجموعة.</p>
+      <div id="groups" class="space-y-4"></div>
+      <p class="font-semibold mt-6 mb-3">ثلاثة اختبارات تكشف السبب</p>
+      <div id="finds" class="grid sm:grid-cols-3 gap-3"></div>
+      <p class="font-semibold mt-6 mb-2">التوصيات</p>
+      <ul id="recs" class="space-y-3"></ul>
+    </div>
+  </div>
+  <p class="muted text-sm mt-4">البيانات في السيناريوهات الثلاثة مولَّدة عشوائيًا لأغراض العرض، والنماذج محاكاة. أما عند رفع ملفك فالأرقام محسوبة من قراراتك الفعلية.</p>
+</section>
+
+<section id="legal" class="max-w-6xl mx-auto px-5 py-20 fade">
+  <h2 class="text-3xl font-bold">كشف التحيز غير المباشر في النصوص والقرارات</h2>
+  <p class="muted mt-2 max-w-3xl">النصوص هنا لا تحتوي كلمات تمييز صريحة. الكشف يقرأ المضمون ويحدد كل عبارة تُنتج أثرًا تمييزيًا خفيًا، ثم يربطها بالمعيار الحقوقي الذي قد تخالفه ويبيّن من تتضرر.</p>
+  <div class="flex flex-wrap gap-2 mt-6" id="lgTabs" role="tablist"></div>
+  <div class="grid lg:grid-cols-5 gap-6 mt-6">
+    <div class="card p-6 lg:col-span-2">
+      <p class="font-semibold mb-3">أمثلة</p>
+      <div class="flex flex-wrap gap-2" id="lgs"></div>
+      <p id="lgNote" class="text-sm muted mt-3 p-3 rounded-lg empty:hidden" style="background:var(--soft)"></p>
+      <label for="lgIn" class="sr-only">النص</label>
+      <textarea id="lgIn" rows="7" class="mt-4" placeholder="أو الصق نصك هنا…"></textarea>
+      <div class="flex flex-wrap gap-3 mt-4">
+        <button id="lgGo" class="btn btn-primary"><i data-lucide="file-search"></i> كشف بالقواعد</button>
+        <button id="lgAi" class="btn hidden" style="background:var(--orange);color:#fff"><i data-lucide="sparkles"></i> تحليل بالذكاء الاصطناعي (Claude)</button>
+      </div>
+      <p id="aiNote" class="text-xs muted mt-3"></p>
+    </div>
+    <div class="card p-6 lg:col-span-3" aria-live="polite">
+      <div id="lgEmpty" class="text-center muted py-12"><i data-lucide="scroll-text" style="width:44px;height:44px;margin:auto"></i><p class="mt-3">اختر موضوعًا ومثالًا لعرض التحليل.</p></div>
+      <div id="lgRes" class="hidden">
+        <div class="flex items-center gap-4"><span id="lgScore" class="text-5xl font-bold ltr"></span><div><p id="lgLevel" class="text-xl font-bold"></p><p id="lgCount" class="text-sm muted"></p></div></div>
+        <div id="lgTypes" class="mt-5 space-y-3"></div>
+        <p class="font-semibold mt-6 mb-2">النص مع العبارات المرصودة</p>
+        <div id="lgMarked" class="p-4 rounded-lg leading-loose" style="background:var(--soft)"></div>
+        <p class="font-semibold mt-6 mb-2">كل عبارة: من تتضرر وما المعيار الحقوقي</p>
+        <ul id="lgTips" class="space-y-3"></ul>
+        <div id="lgRwBox" class="hidden mt-6"><p class="font-semibold mb-2">صياغة بديلة مقترحة</p><div id="lgRw" class="p-4 rounded-lg leading-loose" style="background:var(--soft);border-inline-start:4px solid var(--teal)"></div></div>
+      </div>
+    </div>
+  </div>
+  <p class="muted text-sm mt-4">المراجع الحقوقية مؤشرات على تعارض محتمل مع الاتفاقيات والعهود الدولية، وليست حكمًا قانونيًا نهائيًا. يعتمد العرض على قواعد مكتوبة تغطي الصياغات الواردة في الأمثلة وأشباهها، ويجري المراجعة النهائية مختص.</p>
+</section>
+
+<section id="domains" class="py-20 fade" style="background:var(--soft)">
+  <div class="max-w-6xl mx-auto px-5">
+    <h2 class="text-3xl font-bold">أربعة قطاعات، منهج تدقيق واحد</h2>
+    <p class="muted mt-2 max-w-2xl">تتغير القرارات والخصائص المحمية من قطاع لآخر، ويبقى السؤال ثابتًا: هل يحصل المتساوون في الاستحقاق على النتيجة نفسها؟</p>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-10" id="domGrid"></div>
+    <p class="text-xs muted mt-4">الأرقام في البطاقات توضيحية.</p>
+  </div>
+</section>
+
+<section id="method" class="max-w-6xl mx-auto px-5 py-20 fade">
+  <h2 class="text-3xl font-bold">المنهجية والمعايير التقنية</h2>
+  <p class="muted mt-2 max-w-2xl">نجمع بين مقاييس إحصائية على النتائج وثلاثة اختبارات تكشف مصدر التحيز.</p>
+  <div class="grid md:grid-cols-3 gap-5 mt-10">
+    <div class="card p-6"><i data-lucide="equal" style="color:var(--teal)"></i><h3 class="font-bold mt-3">التكافؤ الديموغرافي</h3><p class="muted text-sm mt-1">Demographic Parity: تتساوى نسبة القرارات الإيجابية بين المجموعات.</p><p class="ltr mt-3 text-sm p-3 rounded-lg" style="background:var(--soft)"><code>P(Ŷ=1 | A=a) = P(Ŷ=1 | A=b)</code></p></div>
+    <div class="card p-6"><i data-lucide="percent" style="color:var(--orange)"></i><h3 class="font-bold mt-3">الأثر المتباين</h3><p class="muted text-sm mt-1">Disparate Impact: نسبة معدل الاختيار الأدنى إلى الأعلى. أقل من 0.80 تستدعي المراجعة (قاعدة الأربعة أخماس).</p><p class="ltr mt-3 text-sm p-3 rounded-lg" style="background:var(--soft)"><code>DI = rate(min) / rate(max)</code></p></div>
+    <div class="card p-6"><i data-lucide="target" style="color:var(--teal)"></i><h3 class="font-bold mt-3">تكافؤ الفرص</h3><p class="muted text-sm mt-1">Equal Opportunity: تتساوى نسبة قبول المستحقين فعلًا بين المجموعات.</p><p class="ltr mt-3 text-sm p-3 rounded-lg" style="background:var(--soft)"><code>TPR(a) = TPR(b)</code></p></div>
+  </div>
+  <div class="grid md:grid-cols-3 gap-5 mt-5">
+    <div class="card p-6"><h3 class="font-bold">اختبار قلب الخاصية</h3><p class="muted text-sm mt-1">Counterfactual: نغيّر الجنس أو الأصل لكل فرد ونُبقي بقية بياناته كما هي. أي قرار يتغير دليل على اعتماد مباشر.</p></div>
+    <div class="card p-6"><h3 class="font-bold">اختبار الحذف</h3><p class="muted text-sm mt-1">Unawareness: نحذف الخاصية المحمية من المدخلات. إن بقي التحيز فهو يتسرب عبر متغيرات بديلة.</p></div>
+    <div class="card p-6"><h3 class="font-bold">كشف المتغيرات البديلة</h3><p class="muted text-sm mt-1">Proxy Detection: نقيس ارتباط كل متغير بالخاصية المحمية، مثل الرمز البريدي أو فجوات السيرة أو الإنفاق السابق.</p></div>
+  </div>
+  <div class="card p-6 mt-8">
+    <h3 class="font-bold text-lg">حاسبة الأثر المتباين</h3>
+    <p class="muted text-sm">أدخل عدد المتقدمين والمقبولين لكل مجموعة.</p>
+    <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+      <label class="text-sm">المجموعة أ: المتقدمون<input id="a1" type="number" min="1" value="200"></label>
+      <label class="text-sm">المجموعة أ: المقبولون<input id="a2" type="number" min="0" value="100"></label>
+      <label class="text-sm">المجموعة ب: المتقدمون<input id="b1" type="number" min="1" value="200"></label>
+      <label class="text-sm">المجموعة ب: المقبولون<input id="b2" type="number" min="0" value="60"></label>
+    </div>
+    <div class="mt-5 flex items-center gap-4 flex-wrap"><span class="text-3xl font-bold ltr" id="diVal">0.60</span><span id="diTxt" class="font-semibold"></span></div>
+    <div class="bar mt-3"><i id="diBar"></i></div>
+  </div>
+</section>
+</main>
+
+
+
+<script>window.SIWAA_API="/api/analyze";</script>
+<script>
+document.documentElement.classList.add("js");
+const $=id=>document.getElementById(id);
+function ic(){try{if(window.lucide)lucide.createIcons()}catch(e){}}
+setTimeout(()=>document.querySelectorAll(".fade").forEach(e=>e.classList.add("in")),2500);
+const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const pc=v=>v===null?"—":Math.round(v*100)+"%";
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(r){let u=0;while(!u)u=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*r())}
+const SC=[
+ {t:"فرز السير الذاتية",attr:"الجنس",g:["رجال","نساء"],proxy:"فجوات في السيرة الذاتية",shift:12,desc:"نموذج يقرر من يُدعى للمقابلة. الكفاءة موزعة بالتساوي بين الجنسين، لكن النساء لديهن فجوات أطول في السيرة (إجازات رعاية) يعاقبها النموذج."},
+ {t:"قروض التمويل",attr:"الحي السكني",g:["الحي أ","الحي ب"],proxy:"الرمز البريدي المصنَّف",shift:14,desc:"نموذج يوافق على القروض أو يرفضها. القدرة على السداد متساوية بين الحيين، لكن النموذج يستخدم تصنيف الرمز البريدي الذي يرتبط بالحي."},
+ {t:"فرز المرضى",attr:"المجموعة العرقية",g:["مجموعة أ","مجموعة ب"],proxy:"الإنفاق الصحي السابق",shift:16,desc:"نموذج يحيل المرضى إلى برنامج رعاية مكثفة. شدة المرض متساوية، لكن النموذج يستخدم الإنفاق السابق بديلًا عن الحاجة، وإنفاق المجموعة ب أقل لصعوبة الوصول للعلاج."}
+];
+let cur=0;
+function gen(sc,b){const r=rng(7),rows=[];for(let i=0;i<1600;i++){const g=r()<.5?0:1,s=60+15*gauss(r),d=Math.max(0,(g?sc.shift:3)+6*gauss(r)),base=s-b*.9*d+4*gauss(r),score=base-b*8*g;rows.push({g,d,q:s>=60?1:0,sc:score,dec:score>=60?1:0,blind:base>=60?1:0,flip:base-b*8*(1-g)>=60?1:0})}return rows}
+function stats(rows,k,names){const m=names.map(()=>({n:0,s:0,p:0,tp:0,ng:0,fp:0}));rows.forEach(x=>{const o=m[x.g],d=x[k];o.n++;o.s+=d;if(x.q===1){o.p++;o.tp+=d}else if(x.q===0){o.ng++;o.fp+=d}});return m.map((o,i)=>({name:names[i],n:o.n,sel:o.n?o.s/o.n:0,tpr:o.p?o.tp/o.p:null,fpr:o.ng?o.fp/o.ng:null}))}
+function summ(st){const se=st.map(x=>x.sel),mx=Math.max(...se),mn=Math.min(...se),hi=se.indexOf(mx),lo=se.lastIndexOf(mn),t=st.map(x=>x.tpr).filter(v=>v!==null),a=st[hi],b=st[lo],p=(a.sel*a.n+b.sel*b.n)/(a.n+b.n),sd=Math.sqrt(p*(1-p)*(1/a.n+1/b.n));return{di:mx?mn/mx:1,eod:t.length>1?Math.max(...t)-Math.min(...t):0,hi,lo,sig:sd?Math.abs((a.sel-b.sel)/sd)>1.96:false}}
+const sc2=S=>Math.round(Math.min(100,(1-S.di)*60+Math.min(S.eod,.5)*80));
+function corr(x,y){const n=x.length,mx=x.reduce((a,b)=>a+b)/n,my=y.reduce((a,b)=>a+b)/n;let sxy=0,sx=0,sy=0;for(let i=0;i<n;i++){sxy+=(x[i]-mx)*(y[i]-my);sx+=(x[i]-mx)**2;sy+=(y[i]-my)**2}return sx&&sy?sxy/Math.sqrt(sx*sy):0}
+function mitigate(rows,S,sc,st){if(S.di>=.98)return null;const dg=S.lo,tg=st[S.hi].sel,arr=rows.filter(x=>x.g===dg).map(x=>x.sc).sort((a,b)=>b-a),thr=arr[Math.max(1,Math.round(tg*arr.length))-1];rows.forEach(x=>x.mit=x.g===dg?(x.sc>=thr?1:0):x.dec);return summ(stats(rows,"mit",sc.g))}
+
+function show(names,st,S,ex){
+  const score=sc2(S),lvl=score<20?["منخفض","لا مؤشرات تحيز بارزة في هذه القرارات.","var(--teal)"]:score<50?["متوسط","توجد فجوات تستحق المراجعة قبل الاعتماد.","var(--orange)"]:["مرتفع","القرارات تعامل المجموعات المتساوية معاملة مختلفة بوضوح.","var(--red)"];
+  $("level").textContent="مستوى التحيز: "+lvl[0];$("levelNote").textContent=lvl[1];
+  const arc=$("arc");arc.style.stroke=lvl[2];arc.style.strokeDashoffset=364.4*(1-score/100);
+  clearInterval(window._t);let n=+$("score").textContent||0;window._t=setInterval(()=>{n+=n<score?1:-1;$("score").textContent=n;if(n===score)clearInterval(window._t)},14);
+  $("groups").innerHTML=st.map((g,i)=>{const bad=i===S.lo&&S.di<.8;return'<div><div class="flex justify-between text-sm mb-1"><span class="font-semibold">'+esc(g.name)+' <span class="muted text-xs">('+g.n+')</span></span><span class="muted text-xs">'+(g.tpr===null?"":"يُقبل "+pc(g.tpr)+" من المؤهلين فعلًا")+'</span></div><div class="flex items-center gap-3"><div class="bar flex-1"><i data-w="'+Math.round(g.sel*100)+'" style="background:'+(bad?"var(--orange)":"var(--teal)")+'"></i></div><span class="font-bold w-12 text-sm">'+pc(g.sel)+'</span></div></div>'}).join("");
+  setTimeout(()=>document.querySelectorAll("#groups .bar>i").forEach(i=>i.style.width=i.dataset.w+"%"),50);
+  const a=st[S.hi],b=st[S.lo],c=(t,v,x,w)=>'<div class="p-3 rounded-lg" style="background:var(--soft)"><p class="text-xs muted">'+t+'</p><p class="text-2xl font-bold ltr" style="color:'+(w?"var(--orange)":"var(--teal)")+'">'+v+'</p><p class="text-xs mt-1">'+x+'</p></div>';
+  const useT=a.tpr!==null&&b.tpr!==null,va=useT?a.tpr:a.sel,vb=useT?b.tpr:b.sel;
+  $("verdict").innerHTML="من كل 100 "+(useT?"شخص مؤهل":"متقدم")+": يُقبل <b>"+Math.round(va*100)+"</b> من "+esc(a.name)+" مقابل <b>"+Math.round(vb*100)+"</b> من "+esc(b.name)+".<br><span style=\"font-weight:500\">"+(S.di<.8||S.eod>.1?"هذا فرق كبير: النموذج لا يعامل المجموعتين بعدل ويحتاج مراجعة.":"الفرق ضمن الحد المقبول.")+"</span>";
+  $("verdict").style.borderInlineStartColor=(S.di<.8||S.eod>.1)?"var(--orange)":"var(--teal)";
+  let f=c("نسبة العدالة",S.di.toFixed(2),"يُقبل "+pc(b.sel)+" من "+esc(b.name)+" مقابل "+pc(a.sel)+" من "+esc(a.name)+". المطلوب 0.80 أو أكثر"+(S.sig?"، والفرق ليس صدفة.":"."),S.di<.8);
+  if(ex){const fl=ex.flips,bl=ex.blind;
+    f+=c("هل «"+esc(ex.attr)+"» سبب القرار؟",(fl*100).toFixed(1)+"%","من الأفراد تغيّر قرارهم عند تبديل «"+esc(ex.attr)+"» وحدها مع بقاء كل شيء آخر.",fl>.01);
+    f+=c("هل يبقى التحيز بعد إخفائها؟",bl.di.toFixed(2),"نسبة العدالة بعد إخفاء «"+esc(ex.attr)+"». إن بقيت منخفضة فالتحيز يتسرب عبر «"+esc(ex.proxy)+"».",bl.di<.8)}
+  else f+=c("اختبار قلب الخاصية","—","يحتاج الوصول إلى النموذج نفسه.",false)+c("المتغيرات البديلة","—","يحتاج ملف المدخلات الكاملة.",false);
+  $("finds").innerHTML=f;
+  const R=[];
+  if(S.di<.8)R.push(["scale","الأثر المتباين أقل من 0.80","فرق الاختيار بين "+esc(a.name)+" و"+esc(b.name)+" يتجاوز الحد المقبول. أوقف الاعتماد الآلي الكامل وأضف مراجعة بشرية للقرارات السلبية."]);
+  if(S.eod>.1)R.push(["target","فجوة في تكافؤ الفرص","المستحقون في المجموعتين لا يُقبلون بنسبة واحدة (فرق "+Math.round(S.eod*100)+" نقطة). راجع بيانات التدريب والتسميات."]);
+  if(ex&&ex.flips>.01)R.push(["user-x","النموذج يستخدم الخاصية المحمية مباشرة","قرارات "+(ex.flips*100).toFixed(1)+"% من الأفراد تتغير بتغيير "+esc(ex.attr)+" وحده. أزلها من المدخلات واحتفظ بها للتدقيق فقط."]);
+  if(ex&&ex.blind.di<.8&&Math.abs(ex.r)>.3)R.push(["link","تحيز غير مباشر عبر متغير بديل","«"+esc(ex.proxy)+"» يرتبط بـ"+esc(ex.attr)+" (r = "+ex.r.toFixed(2)+") وحذف الخاصية لم يعالج المشكلة. أعد تصميم هذا المتغير أو اقصره على دور مبرَّر."]);
+  if(ex&&ex.m)R.push(["sliders","تخفيف محتمل","ضبط عتبة القرار لـ"+esc(b.name)+" يرفع DI من "+S.di.toFixed(2)+" إلى "+ex.m.di.toFixed(2)+". هذا تدبير مؤقت، والحل الأصلي إصلاح النموذج."]);
+  if(!R.length)R.push(["check-circle-2","لا توصيات عاجلة","المقاييس ضمن الحدود المقبولة. استمر في المراقبة الدورية مع تغير البيانات."]);
+  $("recs").innerHTML=R.map(r=>'<li class="flex gap-3 p-3 rounded-lg" style="border:1px solid var(--border)"><i data-lucide="'+r[0]+'" style="color:var(--orange);flex:none"></i><div><p class="font-semibold">'+r[1]+'</p><p class="text-sm muted">'+r[2]+'</p></div></li>').join("");
+  ic();
+}
+function runSc(){const sc=SC[cur],b=$("bias").value/100,rows=gen(sc,b),st=stats(rows,"dec",sc.g),S=summ(st);
+  show(sc.g,st,S,{attr:sc.attr,proxy:sc.proxy,flips:rows.filter(x=>x.dec!==x.flip).length/rows.length,blind:summ(stats(rows,"blind",sc.g)),r:corr(rows.map(x=>x.d),rows.map(x=>x.g)),m:mitigate(rows,S,sc,st)});}
+$("scs").innerHTML=SC.map((s,i)=>'<button class="chip'+(i?"":" on")+'" data-i="'+i+'">'+s.t+'</button>').join("");
+$("scDesc").textContent=SC[0].desc;
+$("scs").addEventListener("click",e=>{const x=e.target.closest("button");if(!x)return;cur=+x.dataset.i;document.querySelectorAll("#scs .chip").forEach(c=>c.classList.toggle("on",c===x));$("scDesc").textContent=SC[cur].desc;runSc()});
+$("bias").addEventListener("input",()=>{$("bv").textContent=$("bias").value+"%";runSc()});
+$("file").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{$("csv").value=r.result;runCsv()};r.readAsText(f)});
+$("runCsv").addEventListener("click",runCsv);
+function runCsv(){
+  const L=$("csv").value.trim().split(/\r?\n/).filter(Boolean);if(L.length<3){$("levelNote").textContent="أدخل رأس الأعمدة وصفين على الأقل.";return}
+  const sp=l=>l.split(/[,;\t]/).map(s=>s.trim()),h=sp(L[0]).map(s=>s.toLowerCase()),gi=h.indexOf("group"),di=h.indexOf("decision"),ai=h.indexOf("actual");
+  if(gi<0||di<0){$("level").textContent="تعذّرت القراءة";$("levelNote").textContent="يلزم وجود العمودين group وdecision في السطر الأول.";return}
+  const names=[],rows=[];L.slice(1).forEach(l=>{const c=sp(l),gn=c[gi];if(gn===undefined||(c[di]!=="0"&&c[di]!=="1"))return;let k=names.indexOf(gn);if(k<0){names.push(gn);k=names.length-1}rows.push({g:k,dec:+c[di],q:ai>=0&&(c[ai]==="0"||c[ai]==="1")?+c[ai]:null})});
+  if(names.length<2||rows.length<2){$("level").textContent="بيانات غير كافية";$("levelNote").textContent="نحتاج مجموعتين مختلفتين على الأقل وقرارات بالقيمة 0 أو 1.";return}
+  const st=stats(rows,"dec",names);show(names,st,summ(st),null);
+}
+const DOMS=[
+ ["briefcase","التوظيف والموارد البشرية","HR & Hiring","تدقق نماذج فرز السير والترقية: هل تختلف نسب الدعوة للمقابلة بين الجنسين عند تساوي الكفاءة؟","DI = 0.53","var(--teal)"],
+ ["gavel","القانوني والقضائي","Legal & Judicial","تدقق أدوات تقدير خطر العود: هل يُصنَّف متهمون من مجموعة بعينها خطرين بالخطأ أكثر من غيرهم؟","FPR 44% مقابل 23%","var(--orange)"],
+ ["heart-pulse","الرعاية الصحية","Healthcare","تدقق نماذج الفرز والإحالة: هل يحصل مرضى بالشدة نفسها على رعاية أقل بسبب متغير بديل مثل الإنفاق؟","TPR 52% مقابل 79%","var(--teal)"],
+ ["landmark","السياسات والتشريعات","Public Policy","تدقق أنظمة الاستحقاق الآلي للدعم: هل ترفض فئات مؤهلة بنسب أعلى؟","رفض أعلى 2.1 ضعفًا","var(--orange)"]
+];
+$("domGrid").innerHTML=DOMS.map(d=>'<article class="dom card p-6"><i data-lucide="'+d[0]+'" style="color:'+d[5]+';width:32px;height:32px"></i><h3 class="font-bold text-lg mt-4">'+d[1]+'</h3><p class="text-xs muted ltr">'+d[2]+'</p><p class="muted text-sm mt-3">'+d[3]+'</p><p class="mt-4 text-sm"><span class="mark ltr">'+d[4]+'</span></p></article>').join("");
+function di(){const a1=+$("a1").value,a2=+$("a2").value,b1=+$("b1").value,b2=+$("b2").value;if(!(a1>0&&b1>0))return;const ra=a2/a1,rb=b2/b1,hi=Math.max(ra,rb),v=hi===0?1:Math.min(ra,rb)/hi,ok=v>=.8;$("diVal").textContent=v.toFixed(2);$("diTxt").textContent=ok?"ضمن الحد المقبول (≥ 0.80)":"أقل من 0.80: يلزم فحص الأثر المتباين";$("diTxt").style.color=ok?"var(--teal)":"var(--orange)";const bar=$("diBar");bar.style.width=Math.min(100,v*100)+"%";bar.style.background=ok?"var(--teal)":"var(--orange)"}
+["a1","a2","b1","b2"].forEach(i=>$(i).addEventListener("input",di));di();
+/*LG-START*/
+const TOPICS=[
+ {t:"النصوص القانونية",items:[
+  {t:"الإقامة الدائمة",n:"لا توجد عبارة تمييزية صريحة، لكن «السلوك المرضي» و«القيم السائدة» و«الإقامة المتصلة» تمنح سلطة تقديرية واسعة وتستبعد الأقليات واللاجئين.",x:"المادة (8): يُشترط في طالب الإقامة الدائمة أن يكون ذا سلوك مرضيّ، وألا تقل مدة إقامته المتصلة عن عشر سنوات، وأن يثبت اندماجه في القيم المجتمعية السائدة."},
+  {t:"الملكية الزراعية",n:"يبدو تنظيمًا للأولوية، لكنه يربط الحق بالنسب العائلي فيستبعد الأسر المهجّرة والأقليات.",x:"المادة (14): تُمنح الأولوية في تملك الأراضي الزراعية لمن لديه سجل أسري في المنطقة منذ ثلاثة أجيال."},
+  {t:"تقدير العقوبة",n:"تبدو مراعاةً لظروف المتهم، لكنها تجعل الفقر والتفكك الأسري سببًا في تشديد العقوبة.",x:"المادة (27): يجوز للمحكمة عند تقدير العقوبة مراعاة البيئة الاجتماعية التي نشأ فيها المتهم ومدى استقرار أسرته."},
+  {t:"الشهادة والتقاضي",n:"شروط تبدو إجرائية، لكنها تُقصي ذوي الإعاقة الذهنية والنفسية وتجعل المظهر شرطًا للتصديق.",x:"المادة (5): تُقبل الشهادة أمام الجهات الرسمية ممن يتمتع بالإدراك السليم والمظهر الذي يبعث على الثقة."},
+  {t:"نص سليم",n:"إجراءات مكتوبة ومعلنة، وحق في الاعتراض أمام جهة مستقلة.",x:"المادة (2): يحق لكل شخص التقدم بطلب الإقامة وفق معايير مكتوبة ومعلنة، ويحق له الاعتراض على القرار أمام جهة مستقلة."}]},
+ {t:"قرارات إدارية",items:[
+  {t:"نقل موظفة",n:"القرار مكتوب بلغة مهنية، لكنه يعاقب موظفة على غياب لم يقع، ويستعمل «الانسجام» لتبرير الإقصاء.",x:"تقرر نقل الأستاذة منى إلى الإدارة المساندة لتعذر انتظام حضورها المتوقع خلال الفصل القادم، ولضمان استقرار بيئة العمل وانسجام الفريق."},
+  {t:"تجديد عقد",n:"الرفض لا يُبنى على أداء أو مؤهلات، بل على «سجل اجتماعي» وعبارة غير محددة تحمي القرار من المراجعة.",x:"رُفض تجديد عقد المهندس خالد لعدم ملاءمة سجله الاجتماعي لطبيعة المشاريع الحساسة، رغم استيفائه المؤهلات المطلوبة."},
+  {t:"ترقية",n:"الإعاقة والمرض لم يُذكرا باسمهما، لكن القرار يقيس الاستحقاق بالتفرغ الكامل والجاهزية.",x:"تقرر عدم ترقية الموظف سامي لأن تفرغه للعمل محدود بحكم ظروفه الصحية، ويُرشَّح بدلًا منه زميل أكثر جاهزية للتكليفات الميدانية."},
+  {t:"قرار سليم",n:"القرار مبني على تقييم أداء معتمد، ويتيح التظلم.",x:"تقرر ترقية الموظفة نورة استنادًا إلى نتائج تقييم الأداء السنوي المعتمد ومؤشرات الإنجاز الموثقة، مع إتاحة حق التظلم خلال ثلاثين يومًا."}]},
+ {t:"شروط التوظيف",items:[
+  {t:"مندوب مبيعات",n:"كل شرط يبدو مهنيًا، لكنها مجتمعة تحصر الوظيفة في شاب متفرغ من طبقة معينة يملك سيارة.",x:"مطلوب مندوب مبيعات: يتمتع بحيوية عالية ومرونة تامة في أوقات العمل والسفر، قادر على بناء علاقات مع كبار العملاء بحكم خلفيته الاجتماعية، ولديه سيارة خاصة."},
+  {t:"مساعد إداري",n:"اللكنة والمظهر والجامعة معايير تُقاس بالانطباع لا بالكفاءة، وتستبعد الأقليات وأبناء الأطراف والفقراء.",x:"تعلن الشركة عن وظيفة مساعد إداري: خريج جامعة مرموقة، يتحدث العربية بلا أي لكنة، متفرغ للعمل، ومظهره يعكس صورة الشركة."},
+  {t:"مهندسون جدد",n:"لا ذكر للسن ولا للجنس، لكن الشروط تستبعد كبار السن ومقدمي الرعاية وذوي الإعاقة الحركية.",x:"فرص للمهندسين الجدد: حديثو التخرج، قادرون على العمل تحت ضغط لساعات طويلة والتنقل بين المواقع، ويفضّل من لا ارتباطات أسرية تعيق الانتقال."},
+  {t:"إعلان سليم",n:"متطلبات قابلة للقياس مع تيسير لذوي الإعاقة.",x:"مطلوب محاسب: خبرة في إعداد القوائم المالية وإجادة برنامج المحاسبة المعتمد، وتُوفَّر ترتيبات تيسيرية لذوي الإعاقة عند الطلب."}]},
+ {t:"شروط الإعانات",items:[
+  {t:"إعانة سكنية",n:"لا توجد كلمة مسيئة، لكن الشروط مجتمعة تستبعد المرأة المعيلة والأسر الممتدة والمتجنسين.",x:"المادة (12): تُمنح الإعانة السكنية لرب الأسرة دون سواه، وتُعطى الأولوية للأسر التقليدية المتزوجين منذ أكثر من خمس سنوات، ويُشترط أن يكون المتقدم مواطنًا بالولادة."},
+  {t:"أسر محدودة الدخل",n:"الإثباتات تبدو تنظيمية، لكنها تستبعد من هم أشد حاجة: النازحون وسكان العشوائيات وأصحاب الاقتصاد غير الرسمي.",x:"يُشترط لصرف إعانة الأسر محدودة الدخل أن يكون لدى المتقدم عنوان سكني ثابت منذ ثلاث سنوات وحساب بنكي نشط ومستند ملكية أو عقد إيجار موثق."},
+  {t:"الدعم الغذائي",n:"يربط الغذاء بحضور دوري، فيحرم من لا يستطيع الحضور لمرض أو إعاقة أو رعاية أو بعد المسافة.",x:"تُعطى الأولوية في الدعم الغذائي للأسر التي يحضر أفرادها دورات التوعية الأسبوعية في المركز الاجتماعي، ويُستثنى من تغيب دون عذر مقبول."},
+  {t:"دعم الأسرة",n:"الشرطان يبدوان ترشيدًا للإنفاق، لكنهما يعاقبان الطفل الرابع على ترتيب ولادته ويحرمان الفقر المزمن.",x:"يُستحق دعم الأسرة لمن لا يتجاوز عدد أطفالها ثلاثة، ولم تتلقَّ الأسرة إعانة من جهة أخرى خلال العشر سنوات الماضية."},
+  {t:"نص سليم",n:"مؤشر حاجة موحد وحق في التمثيل.",x:"تُمنح الإعانة للأسر وفق مؤشر حاجة موحد يشمل الدخل وعدد أفراد الأسرة والحالة الصحية، ويحق للمتقدم الاستعانة بمن يمثله في تقديم الطلب."}]}
+];
+const LT={gender:["جندري","Gender"],disability:["إعاقة وصحة","Disability"],origin:["أصل وجنسية وإقامة","Origin"],social:["أصل اجتماعي وطبقي","Social"],age:["عمر","Age"],family:["حالة أسرية ورعاية","Family"]};
+const LR=[
+ {re:/سلوك[^\s،.؛:]* مرضي[^\s،.؛:]*/gi,type:"social",w:14,rep:"[معايير سلوك محددة وموضوعية]",tip:"معيار أخلاقي فضفاض يتيح تقديرًا شخصيًا ضد الأقليات والفقراء ومن يخالف نمط الأغلبية.",hr:"ICCPR م26؛ UDHR م2"},
+ {re:/مدة إقامت[^\s،.؛:]* المتصلة عن [^\s،.؛:]+ سنوات?/gi,type:"origin",w:16,rep:"[مدة إقامة معقولة مع مراعاة التنقل القسري]",tip:"تعاقب اللاجئين والنازحين والعمال المتنقلين، ومدتها تفوق المعتاد.",hr:"اتفاقية 1951 للاجئين؛ ICCPR م12"},
+ {re:/القيم المجتمعية السائدة/gi,type:"origin",w:22,rep:"[الالتزام بالقوانين النافذة]",tip:"تحوّل الانتماء الثقافي أو الديني إلى شرط، فتستبعد الأقليات والمهاجرين.",hr:"ICCPR م18 و27؛ ICERD م5"},
+ {re:/سجل[^\s،.؛:]* أسري[^\s،.؛:]* في المنطقة منذ [^\s،.؛:]+ أجيال/gi,type:"origin",w:24,rep:"[يُعتمد إثبات الحيازة والاستخدام الفعلي]",tip:"النسب شرط يستبعد المنتقلين والأقليات والأسر المهجّرة، وهو تمييز على أساس الانحدار.",hr:"ICERD م1 و5؛ ICESCR م2(2)"},
+ {re:/البيئة الاجتماعية التي نشأ فيها/gi,type:"social",w:22,rep:"[ظروف الواقعة وملابساتها]",tip:"تقدير العقوبة بحسب نشأة المتهم يعاقبه على فقره أو حيه، ويخالف مبدأ المسؤولية الفردية.",hr:"ICCPR م14 و26؛ UDHR م7"},
+ {re:/استقرار أسرت[^\s،.؛:]*/gi,type:"family",w:16,rep:"[يُحذف]",tip:"يشدد على من فقد أسرته أو نشأ في ظروف صعبة، ولا علاقة له بالفعل المرتكب.",hr:"ICCPR م26؛ CRC م2"},
+ {re:/الإدراك السليم/gi,type:"disability",w:22,rep:"[القدرة على الإدلاء بالشهادة مع ترتيبات داعمة]",tip:"يستبعد ذوي الإعاقة الذهنية والنفسية من الشهادة بدل توفير دعم لاتخاذ القرار والتعبير.",hr:"CRPD م12 و13"},
+ {re:/المظهر الذي يبعث على الثقة|مظهره يعكس صورة الشركة|مظهر[^\s،.؛:]* لائق[^\s،.؛:]*/gi,type:"social",w:16,rep:"[يُحذف؛ يُقاس الأداء لا الانطباع]",tip:"المظهر معيار ذاتي يضر ذوي الإعاقة والأقليات الدينية (اللباس) والفقراء، ويقيس الانطباع لا الكفاءة.",hr:"CRPD م5؛ ICCPR م26؛ ILO 111"},
+ {re:/(?:تعذر )?انتظام حضورها المتوقع/gi,type:"gender",w:22,rep:"[يُبنى القرار على الحضور الفعلي الموثق]",tip:"توقع غياب الموظفة افتراض يرتبط بالحمل والأمومة، ويقود إلى استبعاد النساء.",hr:"CEDAW م11؛ ILO 111 و183"},
+ {re:/انسجام الفريق|استقرار بيئة العمل/gi,type:"social",w:14,rep:"[التعاون المهني الموثق]",tip:"«الانسجام» معيار يُستعمل لإقصاء المختلف عن الأغلبية في الجنس أو الأصل أو الدين أو الإعاقة.",hr:"ILO 111؛ ICCPR م26"},
+ {re:/سجل[^\s،.؛:]* الاجتماعي[^\s،.؛:]*/gi,type:"social",w:22,rep:"[سجل الأداء الوظيفي]",tip:"يحاسَب الموظف على علاقاته وأسرته وخلفيته لا على سلوكه الوظيفي، وهو باب للتمييز بسبب الأصل الاجتماعي والرأي.",hr:"ICCPR م25(ج) و26؛ ILO 111"},
+ {re:/طبيعة المشاريع الحساسة/gi,type:"social",w:12,rep:"[معايير أمنية محددة ومكتوبة]",tip:"عبارة غير محددة تحصّن القرار من المراجعة وتتيح استبعاد أشخاص دون مبرر موضوعي.",hr:"UDHR م8 و10؛ ICCPR م2(3)"},
+ {re:/ظروف[^\s،.؛:]* الصحية|ظروفها الصحية/gi,type:"disability",w:22,rep:"[يُقيَّم الأداء مع توفير ترتيبات تيسيرية معقولة]",tip:"ربط الترقية بالحالة الصحية يعاقب ذوي الإعاقة والأمراض المزمنة بدل توفير التيسير المعقول.",hr:"CRPD م5(3) و27"},
+ {re:/تفرغه للعمل محدود/gi,type:"disability",w:14,rep:"[المساهمة الفعلية في الأداء]",tip:"قياس الاستحقاق بالتفرغ الكامل ينتقص من فرص ذوي الإعاقة ومن يرعون أسرهم.",hr:"CRPD م27؛ ILO 156"},
+ {re:/أكثر جاهزية للتكليفات الميدانية|أكثر جاهزية/gi,type:"disability",w:14,rep:"[مقارنة بكفاءات مكتوبة]",tip:"«الجاهزية» غير معرّفة وتُستعمل لتفضيل الأصحاء والأصغر سنًا والمتفرغين.",hr:"CRPD م27؛ ILO 111"},
+ {re:/حيوية عالية|طاقة عالية/gi,type:"age",w:16,rep:"[مهارات محددة قابلة للقياس]",tip:"الحيوية والطاقة تعبير لغوي عن الشباب، فتستبعد كبار السن وذوي الأمراض المزمنة.",hr:"ICESCR م6 والتعليق العام 20؛ CRPD م27"},
+ {re:/مرونة تامة(?: في أوقات العمل)?/gi,type:"family",w:18,rep:"ساعات عمل محددة ومعلنة",tip:"المرونة المطلقة تستبعد مقدمي الرعاية وأغلبهم نساء، وذوي الإعاقة.",hr:"ILO 156؛ CEDAW م11(2)؛ ICESCR م7"},
+ {re:/خلفيت[^\s،.؛:]* الاجتماعية/gi,type:"social",w:22,rep:"[خبرة موثقة في علاقات العملاء]",tip:"ربط الكفاءة بالخلفية الاجتماعية يعيد إنتاج الامتياز الطبقي ويستبعد أبناء الفئات الفقيرة والمهمشة.",hr:"ILO 111؛ ICESCR م2(2)"},
+ {re:/سيارة خاصة/gi,type:"social",w:14,rep:"وسيلة تنقل مناسبة مع بدل مواصلات",tip:"اشتراط ملكية السيارة يستبعد الفقراء وذوي الإعاقة والنساء في بيئات يقل فيها استخدامها.",hr:"ICESCR م6؛ CRPD م27"},
+ {re:/جامع(?:ة|ات) مرموقة/gi,type:"social",w:16,rep:"مؤهل معتمد في المجال",tip:"يعيد إنتاج الفوارق الطبقية لأن الالتحاق بها مرتبط بالدخل والمكان.",hr:"ICESCR م2(2) و13؛ ILO 111"},
+ {re:/(?:بلا|دون)(?: أي)? لكنة/gi,type:"origin",w:22,rep:"[مستوى تواصل مطلوب للمهمة]",tip:"اللكنة مؤشر على المنطقة أو الأصل أو الهجرة وليست مقياسًا للكفاءة اللغوية.",hr:"ICERD م5؛ ILO 111"},
+ {re:/متفرغ[^\s،.؛:]* للعمل/gi,type:"family",w:16,rep:"ملتزم بساعات الدوام المحددة",tip:"التفرغ التام يستبعد من يرعون أطفالًا أو أقارب، وذوي الإعاقة.",hr:"ILO 156؛ CEDAW م11(2)"},
+ {re:/حديث[^\s،.؛:]* التخرج/gi,type:"age",w:20,rep:"[مؤهل مطلوب دون قيد على سنة التخرج]",tip:"حداثة التخرج استبعاد غير مباشر لمن تجاوزوا سنًا معينة أو عادوا للدراسة بعد رعاية أو عمل.",hr:"ICESCR التعليق العام 20؛ ILO 111"},
+ {re:/تحت ضغط لساعات طويلة|لساعات طويلة/gi,type:"family",w:14,rep:"[ساعات العمل المحددة وفق النظام]",tip:"ساعات غير محددة تستبعد مقدمي الرعاية وذوي الأمراض المزمنة.",hr:"ICESCR م7(د)؛ ILO 156"},
+ {re:/التنقل بين المواقع/gi,type:"disability",w:12,rep:"[حسب متطلب موثق مع تيسير للمعاقين]",tip:"اشتراط التنقل دون حاجة فعلية يستبعد ذوي الإعاقة الحركية.",hr:"CRPD م27"},
+ {re:/من لا ارتباطات أسرية[^.،]*/gi,type:"family",w:24,rep:"[يُحذف]",tip:"تفضيل غير المرتبطين بأسرة تمييز على أساس الحالة الأسرية يقع على النساء والآباء المعيلين.",hr:"ILO 156؛ CEDAW م11(2)؛ ICESCR م10"},
+ {re:/رب (?:ال)?أسر[ةه]/gi,type:"gender",w:18,rep:"المعيل أو مقدّم الرعاية",tip:"تفترض ضمنًا أن المعيل رجل، فتُقصي المرأة المعيلة والأرملة والمطلقة.",hr:"CEDAW م13 و15؛ ICESCR م3"},
+ {re:/دون سواه/gi,type:"social",w:12,rep:"وفق معايير الاستحقاق",tip:"الحصر في شخص واحد يحرم أفراد الأسرة الآخرين، ومنهم الزوجة، ولو كانوا المعيلين الفعليين.",hr:"CEDAW م15؛ ICESCR م11"},
+ {re:/أسر(?:ة)? (?:التقليدية|النموذجية)/gi,type:"family",w:16,rep:"أسر مستحقة بحسب الدخل والحاجة",tip:"تعريف «التقليدية» غير محدد ويستبعد الأسر ذات العائل الواحد والممتدة.",hr:"ICESCR م10 و11؛ CRC م2"},
+ {re:/المتزوج[^\s،.؛:]*(?: منذ أكثر من [^\s،.؛:]+ سنوات?)?/gi,type:"family",w:16,rep:"[يُحذف شرط مدة الزواج]",tip:"يستبعد الأرامل والمطلقات والعازبين دون صلة بالحاجة.",hr:"CEDAW م16؛ ICCPR م26"},
+ {re:/مواطن[^\s،.؛:]* (?:بالولادة|بالتجنس)/gi,type:"origin",w:24,rep:"مواطنًا",tip:"التمييز بين المواطن بالولادة والمتجنس ينشئ درجتين من المواطنة ويقع على فئات مهاجرة وعرقية بعينها.",hr:"ICCPR م26؛ UDHR م2 و15"},
+ {re:/عنوان[^\s،.؛:]* (?:سكني[^\s،.؛:]* )?ثابت[^\s،.؛:]*(?: منذ [^\s،.؛:]+ سنوات)?/gi,type:"social",w:18,rep:"[وسيلة إثبات إقامة بديلة]",tip:"يستبعد المشردين والرحّل والنازحين وسكان العشوائيات، وهم أشد الفئات حاجة.",hr:"ICESCR م9 و11؛ UDHR م25"},
+ {re:/حساب[^\s،.؛:]* بنكي[^\s،.؛:]* نشط[^\s،.؛:]*/gi,type:"social",w:14,rep:"[وسيلة صرف بديلة]",tip:"يستبعد الفقراء والمتنقلين وأصحاب الاقتصاد غير الرسمي.",hr:"ICESCR م9؛ UDHR م25"},
+ {re:/مستند[^\s،.؛:]* ملكية أو عقد إيجار موثق[^\s،.؛:]*/gi,type:"social",w:16,rep:"[إثبات سكن بديل]",tip:"يستبعد سكان العشوائيات والمقيمين بلا عقود رسمية، وأغلبهم من الفئات الأفقر.",hr:"ICESCR م11 والتعليق العام 4"},
+ {re:/يحضر أفرادها دورات التوعية الأسبوعية في المركز الاجتماعي/gi,type:"disability",w:20,rep:"[الصرف غير مشروط بالحضور]",tip:"ربط الغذاء بالحضور الدوري يحرم ذوي الإعاقة والمرضى ومقدمي الرعاية وسكان المناطق النائية.",hr:"ICESCR م9 و11؛ CRPD م28"},
+ {re:/(?:و)?ي[^\s،.؛:]*ستثنى من تغيب دون عذر مقبول|دون عذر مقبول/gi,type:"social",w:14,rep:"[استثناءات محددة ومعلنة]",tip:"«العذر المقبول» غير محدد ويُترك لتقدير الموظف، فيضر الفئات الأضعف.",hr:"UDHR م8؛ ICESCR م9"},
+ {re:/لا يتجاوز عدد أطفالها [^\s،.؛:]+/gi,type:"family",w:22,rep:"[يُحذف؛ معيار الحاجة]",tip:"تحديد الدعم بعدد الأطفال يعاقب الأطفال الأصغر ترتيبًا على ما لا يد لهم فيه، ويمس حق الأسرة في تقرير عدد أطفالها.",hr:"CRC م2؛ CEDAW م16(1)(هـ)"},
+ {re:/لم تتلق[^\s،.؛:]* الأسرة إعانة من جهة أخرى خلال [^\s،.؛:]+ سنوات الماضية/gi,type:"social",w:18,rep:"[يُحذف؛ الاستحقاق بحسب الحاجة الحالية]",tip:"يعاقب الفقر المتكرر والمزمن ويحرم من يحتاجون الدعم باستمرار.",hr:"ICESCR م9 والتعليق العام 19"}
+];
+function lgAnalyze(text){
+  const hits=[];LR.forEach(r=>{r.re.lastIndex=0;let m;while((m=r.re.exec(text))){if(!m[0].length){r.re.lastIndex++;continue}hits.push({s:m.index,e:m.index+m[0].length,r,txt:m[0]})}});
+  hits.sort((a,b)=>a.s-b.s||b.e-a.e);const out=[];let end=-1;hits.forEach(h=>{if(h.s>=end){out.push(h);end=h.e}});
+  const by={};Object.keys(LT).forEach(k=>by[k]=0);out.forEach(h=>by[h.r.type]+=h.r.w);
+  return{hits:out,by,total:Math.min(100,out.reduce((a,h)=>a+h.r.w,0))};
+}
+/*LG-END*/
+function lgRender(text,pre,mode){
+  const {hits,by,total}=pre||lgAnalyze(text);let mk="",rw="",p=0;
+  hits.forEach(h=>{mk+=esc(text.slice(p,h.s))+'<span class="mark">'+esc(h.txt)+'</span>';rw+=esc(text.slice(p,h.s))+'<span class="mark" style="border-color:var(--teal)">'+esc(h.r.rep)+'</span>';p=h.e});
+  mk+=esc(text.slice(p));rw+=esc(text.slice(p));
+  $("lgMarked").innerHTML=mk;$("lgRw").innerHTML=rw;$("lgRwBox").classList.toggle("hidden",!hits.length);
+  const lv=total<20?["منخفض","var(--teal)"]:total<50?["متوسط","var(--orange)"]:["مرتفع","var(--red)"];
+  $("lgScore").textContent=total;$("lgScore").style.color=lv[1];$("lgLevel").textContent="خطر تمييز غير مباشر: "+lv[0];$("lgCount").textContent=(mode||"قواعد مكتوبة")+": "+(hits.length?("رُصدت "+hits.length+" عبارات تحمل أثرًا تمييزيًا"):"لم تُرصد عبارات إشكالية");
+  $("lgTypes").innerHTML=Object.keys(LT).filter(k=>by[k]>0).map(k=>{const v=Math.min(100,by[k]);return'<div><div class="flex justify-between text-sm mb-1"><span>'+LT[k][0]+'</span><span>'+v+'%</span></div><div class="bar"><i data-w="'+v+'" style="background:'+(v>=40?"var(--orange)":"var(--teal)")+'"></i></div></div>'}).join("");
+  setTimeout(()=>document.querySelectorAll("#lgTypes .bar>i").forEach(i=>i.style.width=i.dataset.w+"%"),50);
+  let t=hits.map(h=>'<li class="p-3 rounded-lg" style="border:1px solid var(--border)"><p class="font-semibold">«'+esc(h.txt)+'» <span class="text-xs muted">'+LT[h.r.type][0]+'</span></p><p class="text-sm muted mt-1">'+h.r.tip+'</p><p class="text-xs mt-2 flex items-center gap-1" style="color:var(--teal)"><i data-lucide="scale" style="width:14px;height:14px"></i><span>المرجع الحقوقي: <span class="ltr">'+esc(h.r.hr)+'</span></span></p></li>').join("");
+  if(!t)t='<li class="flex gap-3 p-3 rounded-lg" style="border:1px solid var(--border)"><i data-lucide="check-circle-2" style="color:var(--teal);flex:none"></i><p class="text-sm">المعايير قابلة للقياس ولا تعتمد على خصائص الشخص أو أسرته أو مكانه.</p></li>';
+  $("lgTips").innerHTML=t;$("lgEmpty").classList.add("hidden");$("lgRes").classList.remove("hidden");ic();
+}
+let lgTopic=0;
+function lgPick(i){const s=TOPICS[lgTopic].items[i];$("lgIn").value=s.x;$("lgNote").textContent=s.n;document.querySelectorAll("#lgs .chip").forEach((c,j)=>c.classList.toggle("on",j===i));lgRender(s.x)}
+function lgTab(k){lgTopic=k;document.querySelectorAll("#lgTabs .chip").forEach((c,j)=>c.classList.toggle("on",j===k));$("lgs").innerHTML=TOPICS[k].items.map((s,i)=>'<button class="chip" data-i="'+i+'">'+s.t+'</button>').join("");lgPick(0)}
+$("lgTabs").innerHTML=TOPICS.map((t,i)=>'<button class="chip" role="tab" data-k="'+i+'">'+t.t+'</button>').join("");
+$("lgTabs").addEventListener("click",e=>{const b=e.target.closest("button");if(b)lgTab(+b.dataset.k)});
+$("lgs").addEventListener("click",e=>{const b=e.target.closest("button");if(b)lgPick(+b.dataset.i)});
+$("lgGo").addEventListener("click",()=>{const t=$("lgIn").value.trim();if(!t){$("lgIn").focus();return}$("lgNote").textContent="";document.querySelectorAll("#lgs .chip").forEach(c=>c.classList.remove("on"));lgRender(t)});
+lgTab(0);
+const API=window.SIWAA_API||null;
+let SMP=null;
+(async()=>{try{SMP=window.claude?await window.claude.use("sample"):null}catch(e){SMP=null}
+  if(SMP||API){$("lgAi").classList.remove("hidden");$("aiNote").textContent="الزر البرتقالي يرسل النص إلى Claude ليحلله بفهم المعنى، وقد تظهر لك نافذة طلب إذن عند أول استخدام."}
+  else $("aiNote").textContent="تحليل Claude يعمل عند فتح الصفحة داخل حساب claude.ai."})();
+$("lgAi").addEventListener("click",async()=>{
+  const t=$("lgIn").value.trim();if(!t){$("lgIn").focus();return}
+  if(!SMP&&!API)return;const btn=$("lgAi");btn.disabled=true;$("aiNote").textContent="Claude يحلل النص…";
+  const types=Object.keys(LT).join(" | ");
+  const prompt=`أنت خبير في حقوق الإنسان وعدم التمييز. حلّل النص التالي واكشف كل عبارة تحمل تحيزًا غير مباشر أو أثرًا تمييزيًا خفيًا، حتى لو خلا النص من أي كلمة تمييز صريحة، مع التركيز على ما قد يخالف مبادئ حقوق الإنسان (عدم التمييز، المساواة أمام القانون، الحق في العمل والضمان الاجتماعي والسكن، حقوق المرأة وذوي الإعاقة والطفل).
+القواعد:
+- phrase مقتطعة حرفيًا من النص كما وردت تمامًا (نسخ مطابق).
+- type واحد من: ${types} (gender جندري، disability إعاقة وصحة، origin أصل وجنسية وإقامة، social أصل اجتماعي وطبقي، age عمر، family حالة أسرية ورعاية).
+- w رقم من 5 إلى 25 يمثل شدة الأثر.
+- tip جملة عربية قصيرة تبيّن من يتضرر ولماذا.
+- hr مرجع حقوقي مختصر ومؤكد (مثل CEDAW م11 أو CRPD م27 أو ICESCR م9). لا تخترع أرقام مواد، وإن لم تتأكد فاكتب المبدأ العام فقط.
+- rep صياغة بديلة محايدة قصيرة.
+- لا تُدرج الشروط المشروعة والمبررة موضوعيًا. إن كان النص سليمًا فأعد hits فارغة.
+أعد JSON فقط بهذا الشكل: {"hits":[{"phrase":"","type":"","w":0,"tip":"","hr":"","rep":""}]}
+
+النص:
+${t}`;
+  try{
+    const d=SMP?await SMP.json(prompt,{modelTier:"default",cache:false}):await (async()=>{const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:t})});if(!r.ok)throw {code:"api"};return r.json()})();
+    const hs=[];((d&&d.hits)||[]).forEach(x=>{const ph=String(x.phrase||""),i=ph?t.indexOf(ph):-1;if(i<0)return;hs.push({s:i,e:i+ph.length,txt:ph,r:{type:LT[x.type]?x.type:"social",w:Math.max(5,Math.min(25,+x.w||12)),tip:esc(x.tip||""),hr:String(x.hr||""),rep:String(x.rep||ph)}})});
+    hs.sort((a,b)=>a.s-b.s||b.e-a.e);const out=[];let end=-1;hs.forEach(x=>{if(x.s>=end){out.push(x);end=x.e}});
+    const by={};Object.keys(LT).forEach(k=>by[k]=0);out.forEach(x=>by[x.r.type]+=x.r.w);
+    lgRender(t,{hits:out,by,total:Math.min(100,out.reduce((a,x)=>a+x.r.w,0))},"تحليل Claude");
+    $("aiNote").textContent="";
+  }catch(e){
+    const c=e&&e.code;$("aiNote").textContent=c==="not_granted"?"لم تسمح باستخدام Claude، يمكنك استخدام الكشف بالقواعد.":c==="rate_limited"?"طلبات كثيرة، انتظر قليلًا ثم أعد المحاولة.":"تعذّر التحليل الآن، جرّب الكشف بالقواعد.";
+  }finally{btn.disabled=false}
+});
+const root=document.documentElement;
+$("themeBtn").addEventListener("click",()=>{const dark=root.dataset.theme?root.dataset.theme==="dark":matchMedia("(prefers-color-scheme:dark)").matches;root.dataset.theme=dark?"light":"dark"});
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}}),{threshold:.1});
+document.querySelectorAll(".fade").forEach(el=>io.observe(el));
+ic();runSc();
+</script>
+</body>
+</html>
